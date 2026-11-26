@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickTools — Personal Web Utilities</title>
+  <meta name="description" content="A lightweight personal web utility toolbox for JSON formatting, Base64/URL encoding, and Unix timestamp conversion." />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #0b1220;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --ok: #34d399;
+      --err: #fb7185;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at top right, #172554 0%, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 32px 20px 64px;
+    }
+    .container { max-width: 920px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .brand h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand p { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--ok);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 9px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .tab:hover { color: var(--text); border-color: var(--accent); }
+    .tab.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      backdrop-filter: blur(8px);
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel h2 { font-size: 1.15rem; margin-bottom: 6px; }
+    .panel .desc { color: var(--muted); font-size: 0.88rem; margin-bottom: 18px; }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    textarea:focus, input:focus { border-color: var(--accent); }
+    textarea { min-height: 150px; resize: vertical; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    button.btn {
+      background: var(--accent);
+      color: #082f49;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    button.btn:hover { background: var(--accent-hover); }
+    button.btn.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .status {
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      min-height: 20px;
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .kv {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .kv label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+    .kv .val { font-family: ui-monospace, monospace; font-size: 1rem; word-break: break-all; }
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>QuickTools</h1>
+        <p>Lightweight browser-side developer &amp; daily utilities — 100% local execution.</p>
+      </div>
+      <div class="badge"><span class="dot"></span>HTTPS Active</div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="json">JSON Formatter</button>
+      <button class="tab" data-tab="codec">Base64 &amp; URL</button>
+      <button class="tab" data-tab="time">Timestamp Converter</button>
+    </div>
+
+    <div class="card">
+      <!-- JSON Formatter -->
+      <section class="panel active" id="panel-json">
+        <h2>JSON Formatter &amp; Validator</h2>
+        <p class="desc">Format, minify, and validate JSON directly in your browser without sending data anywhere.</p>
+        <textarea id="json-input" placeholder='{"hello":"world","items":[1,2,3]}'></textarea>
+        <div class="actions">
+          <button class="btn" id="btn-json-fmt">Format (2 spaces)</button>
+          <button class="btn secondary" id="btn-json-min">Minify</button>
+          <button class="btn secondary" id="btn-json-copy">Copy</button>
+          <button class="btn secondary" id="btn-json-clear">Clear</button>
+        </div>
+        <div class="status" id="json-status"></div>
+      </section>
+
+      <!-- Base64 & URL -->
+      <section class="panel" id="panel-codec">
+        <h2>Base64 &amp; URL Encoder / Decoder</h2>
+        <p class="desc">UTF-8 safe Base64 and URI component encoding/decoding.</p>
+        <textarea id="codec-input" placeholder="Enter text to encode or decode..."></textarea>
+        <div class="actions">
+          <button class="btn" id="btn-b64-enc">Base64 Encode</button>
+          <button class="btn secondary" id="btn-b64-dec">Base64 Decode</button>
+          <button class="btn secondary" id="btn-url-enc">URL Encode</button>
+          <button class="btn secondary" id="btn-url-dec">URL Decode</button>
+        </div>
+        <div class="status" id="codec-status"></div>
+        <textarea id="codec-output" readonly placeholder="Result will appear here..."></textarea>
+      </section>
+
+      <!-- Timestamp Converter -->
+      <section class="panel" id="panel-time">
+        <h2>Unix Timestamp Converter</h2>
+        <p class="desc">Live current clock and quick conversion between Unix timestamps and ISO/local time.</p>
+        <div class="grid-2" style="margin-bottom: 18px;">
+          <div class="kv">
+            <label>Current Unix Timestamp (Seconds)</label>
+            <div class="val" id="now-unix">—</div>
+          </div>
+          <div class="kv">
+            <label>Current UTC / ISO 8601</label>
+            <div class="val" id="now-iso">—</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label style="display:block;font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Unix Timestamp (sec or ms)</label>
+            <input type="text" id="ts-input" placeholder="e.g. 1764172800" />
+            <div class="actions">
+              <button class="btn" id="btn-ts-convert">Convert</button>
+              <button class="btn secondary" id="btn-ts-now">Use Now</button>
+            </div>
+          </div>
+          <div class="kv">
+            <label>Converted Result</label>
+            <div class="val" id="ts-result" style="font-size:0.88rem;color:var(--muted);">Enter a timestamp and click Convert</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <p>QuickTools &middot; Personal Web Utilities &middot; All computations run locally in your browser.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Tabs
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // JSON
+    const jsonIn = document.getElementById('json-input');
+    const jsonSt = document.getElementById('json-status');
+    const setStatus = (el, msg, ok) => { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'err'); };
+
+    document.getElementById('btn-json-fmt').onclick = () => {
+      try {
+        jsonIn.value = JSON.stringify(JSON.parse(jsonIn.value), null, 2);
+        setStatus(jsonSt, 'Valid JSON formatted.', true);
+      } catch (e) { setStatus(jsonSt, 'Invalid JSON: ' + e.message, false); }
+    };
+    document.getElementById('btn-json-min').onclick = () => {
+      try {
+        jsonIn.value = JSON.stringify(JSON.parse(jsonIn.value));
+        setStatus(jsonSt, 'Valid JSON minified.', true);
+      } catch (e) { setStatus(jsonSt, 'Invalid JSON: ' + e.message, false); }
+    };
+    document.getElementById('btn-json-copy').onclick = async () => {
+      await navigator.clipboard.writeText(jsonIn.value);
+      setStatus(jsonSt, 'Copied to clipboard.', true);
+    };
+    document.getElementById('btn-json-clear').onclick = () => {
+      jsonIn.value = ''; jsonSt.textContent = '';
+    };
+
+    // Codec
+    const codecIn = document.getElementById('codec-input');
+    const codecOut = document.getElementById('codec-output');
+    const codecSt = document.getElementById('codec-status');
+
+    document.getElementById('btn-b64-enc').onclick = () => {
+      try {
+        const bytes = new TextEncoder().encode(codecIn.value);
+        let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+        codecOut.value = btoa(bin);
+        setStatus(codecSt, 'Encoded to Base64.', true);
+      } catch (e) { setStatus(codecSt, e.message, false); }
+    };
+    document.getElementById('btn-b64-dec').onclick = () => {
+      try {
+        const bin = atob(codecIn.value.trim());
+        const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+        codecOut.value = new TextDecoder().decode(bytes);
+        setStatus(codecSt, 'Decoded from Base64.', true);
+      } catch (e) { setStatus(codecSt, 'Invalid Base64: ' + e.message, false); }
+    };
+    document.getElementById('btn-url-enc').onclick = () => {
+      codecOut.value = encodeURIComponent(codecIn.value);
+      setStatus(codecSt, 'URL encoded.', true);
+    };
+    document.getElementById('btn-url-dec').onclick = () => {
+      try {
+        codecOut.value = decodeURIComponent(codecIn.value);
+        setStatus(codecSt, 'URL decoded.', true);
+      } catch (e) { setStatus(codecSt, 'Invalid URL encoding: ' + e.message, false); }
+    };
+
+    // Timestamp
+    const updateClock = () => {
+      const now = new Date();
+      document.getElementById('now-unix').textContent = Math.floor(now.getTime() / 1000);
+      document.getElementById('now-iso').textContent = now.toISOString();
+    };
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    const convertTs = () => {
+      const raw = document.getElementById('ts-input').value.trim();
+      const num = Number(raw);
+      const out = document.getElementById('ts-result');
+      if (!raw || Number.isNaN(num)) {
+        out.style.color = 'var(--err)';
+        out.textContent = 'Please enter a valid numeric timestamp.';
+        return;
+      }
+      const ms = raw.length > 11 ? num : num * 1000;
+      const d = new Date(ms);
+      out.style.color = 'var(--text)';
+      out.innerHTML = 'Local: ' + d.toLocaleString() + '<br/>UTC: ' + d.toISOString();
+    };
+    document.getElementById('btn-ts-convert').onclick = convertTs;
+    document.getElementById('btn-ts-now').onclick = () => {
+      document.getElementById('ts-input').value = Math.floor(Date.now() / 1000);
+      convertTs();
+    };
+  </script>
+</body>
+</html>
